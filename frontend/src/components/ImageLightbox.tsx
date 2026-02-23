@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import React, { useEffect } from 'react';
 import { X, ZoomIn } from 'lucide-react';
 
 // ─── Lightbox Overlay ────────────────────────────────────────────────────────
@@ -57,17 +57,30 @@ interface ClickableImageProps {
     onClick: () => void;
 }
 
-export const ClickableImage = ({ src, alt = '', className = '', onClick }: ClickableImageProps) => (
-    <div
-        className={`relative cursor-zoom-in group overflow-hidden ${className}`}
-        onClick={onClick}
-        title="Click to enlarge"
-    >
-        <img src={src} alt={alt} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
-        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-all flex items-center justify-center">
-            <ZoomIn size={22} className="text-white opacity-0 group-hover:opacity-100 transition-opacity drop-shadow-lg" />
+export const ClickableImage = ({ src, alt = '', className = '', onClick }: ClickableImageProps) => {
+    const handleClick = (e: React.MouseEvent) => {
+        e.stopPropagation(); // prevent bubbling to parent nav/link handlers
+        e.preventDefault();  // prevent any default browser navigation
+        onClick();
+    };
+
+    return (
+        <div
+            className={`relative cursor-zoom-in group overflow-hidden ${className}`}
+            onClick={handleClick}
+            title="Click to enlarge"
+        >
+            <img
+                src={src}
+                alt={alt}
+                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                onClick={handleClick}
+            />
+            <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-all flex items-center justify-center pointer-events-none">
+                <ZoomIn size={22} className="text-white opacity-0 group-hover:opacity-100 transition-opacity drop-shadow-lg" />
+            </div>
         </div>
-    </div>
-);
+    );
+};
 
 export default ImageLightbox;
