@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import ImageLightbox, { ClickableImage } from '../components/ImageLightbox';
 import { useAuth } from '../context/AuthContext';
 import api from '../services/api';
 import type { Complaint } from '../types';
@@ -28,6 +29,7 @@ const OfficerDashboard = () => {
     const [updatingId, setUpdatingId] = useState<string | null>(null);
     const [assigningId, setAssigningId] = useState<string | null>(null);
     const [officerNameInputs, setOfficerNameInputs] = useState<Record<string, string>>({});
+    const [lightbox, setLightbox] = useState<{ src: string; alt: string } | null>(null);
 
     const fetchComplaints = async () => {
         try {
@@ -187,6 +189,15 @@ const OfficerDashboard = () => {
                                             </div>
 
                                             <h4 className="text-xl font-semibold text-slate-100">{complaint.title}</h4>
+
+                                            {(complaint as any).imageUrl && (
+                                                <ClickableImage
+                                                    src={(complaint as any).imageUrl}
+                                                    alt={complaint.title}
+                                                    className="h-40 w-full rounded-xl border border-white/10 overflow-hidden"
+                                                    onClick={() => setLightbox({ src: (complaint as any).imageUrl, alt: complaint.title })}
+                                                />
+                                            )}
 
                                             {/* Description */}
                                             <div className="bg-white/5 rounded-xl p-4 border border-white/5">
@@ -366,6 +377,15 @@ const OfficerDashboard = () => {
                     </div>
                 )}
             </div>
+        </div>
+
+            {lightbox && (
+                <ImageLightbox
+                    src={lightbox.src}
+                    alt={lightbox.alt}
+                    onClose={() => setLightbox(null)}
+                />
+            )}
         </div>
     );
 };

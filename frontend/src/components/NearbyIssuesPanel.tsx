@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { MapPin, ThumbsUp, Loader2, LocateOff, ArrowUpRight } from 'lucide-react';
 import api from '../services/api';
 import { useAuth } from '../context/AuthContext';
+import ImageLightbox, { ClickableImage } from './ImageLightbox';
 
 interface NearbyComplaint {
     _id: string;
@@ -36,6 +37,7 @@ const NearbyIssuesPanel = ({ radiusKm = 3 }: NearbyIssuesPanelProps) => {
     const [state, setState] = useState<'idle' | 'requesting' | 'loading' | 'denied' | 'done'>('idle');
     const [issues, setIssues] = useState<NearbyComplaint[]>([]);
     const [upvotedSet, setUpvotedSet] = useState<Set<string>>(new Set());
+    const [lightboxSrc, setLightboxSrc] = useState<{ src: string; alt: string } | null>(null);
 
     useEffect(() => {
         setState('requesting');
@@ -104,78 +106,85 @@ const NearbyIssuesPanel = ({ radiusKm = 3 }: NearbyIssuesPanelProps) => {
     }
 
     return (
-        <div className="space-y-4">
-            <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                    <MapPin size={16} className="text-blue-400" />
-                    <h3 className="font-bold text-white uppercase tracking-widest text-xs">
-                        Issues Near You ({radiusKm}km radius)
-                    </h3>
+        <>
+            <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                        <MapPin size={16} className="text-blue-400" />
+                        <h3 className="font-bold text-white uppercase tracking-widest text-xs">
+                            Issues Near You ({radiusKm}km radius)
+                        </h3>
+                    </div>
+                    {state === 'loading' && <Loader2 size={14} className="animate-spin text-blue-400" />}
+                    <span className="text-xs text-slate-500">{issues.length} found</span>
                 </div>
-                {state === 'loading' && <Loader2 size={14} className="animate-spin text-blue-400" />}
-                <span className="text-xs text-slate-500">{issues.length} found</span>
-            </div>
 
-            {issues.length === 0 && state === 'done' && (
-                <div className="glass-card p-8 border border-white/5 text-center text-slate-500 text-sm">
-                    🎉 No reported issues in your area!
-                </div>
-            )}
+                {issues.length === 0 && state === 'done' && (
+                    <div className="glass-card p-8 border border-white/5 text-center text-slate-500 text-sm">
+                        🎉 No reported issues in your area!
+                    </div>
+                )}
 
-            <div className="space-y-3 max-h-[500px] overflow-y-auto pr-1">
-                {issues.map(issue => (
-                    <div
-                        key={issue._id}
-                        className="glass-card border border-white/5 hover:border-blue-500/20 transition-all overflow-hidden group"
-                    >
-                        {issue.imageUrl && (
-                            <div className="relative h-28 overflow-hidden">
-                                <img
+                <div className="space-y-3 max-h-[500px] overflow-y-auto pr-1">
+                    {issues.map(issue => (
+                        <div
+                            key={issue._id}
+                            className="glass-card border border-white/5 hover:border-blue-500/20 transition-all overflow-hidden group"
+                        >
+                            {issue.imageUrl && (
+                                <ClickableImage
                                     src={issue.imageUrl}
                                     alt={issue.title}
-                                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                                    className="h-28 w-full"
+                                    onClick={() => setLightboxSrc({ src: issue.imageUrl!, alt: issue.title })}
                                 />
-                                <div className="absolute inset-0 bg-gradient-to-t from-slate-950/90 via-slate-950/30 to-transparent" />
-                                <span className="absolute bottom-2 left-3 text-xs font-bold text-white/90">{issue.department}</span>
-                            </div>
-                        )}
-                        <div className="p-4 space-y-2">
-                            <div className="flex items-start justify-between gap-2">
-                                <p className="text-sm font-semibold text-white leading-tight line-clamp-2">{issue.title}</p>
-                                <ArrowUpRight size={14} className="text-slate-500 shrink-0 mt-0.5" />
-                            </div>
-                            {!issue.imageUrl && (
-                                <p className="text-xs text-slate-500">{issue.department}</p>
                             )}
-                            <div className="flex items-center gap-2 flex-wrap">
-                                <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${statusColor[issue.status] || 'bg-slate-700 text-slate-400'}`}>
-                                    {issue.status}
-                                </span>
-                                <span className="text-[10px] text-slate-500 flex items-center gap-1">
-                                    <MapPin size={10} /> {issue.distanceKm} km away
-                                </span>
-                            </div>
-                            <div className="flex items-center justify-between pt-1">
-                                <p className="text-[10px] text-slate-600 truncate">{issue.complaintId}</p>
-                                <button
-                                    onClick={() => handleUpvote(issue._id)}
-                                    disabled={!user}
-                                    className={`flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-lg transition-all ${upvotedSet.has(issue._id)
-                                        ? 'bg-blue-500/20 text-blue-400 border border-blue-500/30'
-                                        : 'bg-white/5 text-slate-400 hover:bg-white/10 border border-white/5'
-                                        } ${!user ? 'opacity-50 cursor-not-allowed' : ''}`}
-                                    title={!user ? 'Login to upvote' : upvotedSet.has(issue._id) ? 'Remove upvote' : 'Upvote this issue'}
-                                >
-                                    <ThumbsUp size={12} />
-                                    {issue.upvotes ?? 0}
-                                </button>
+                            <div className="p-4 space-y-2">
+                                <div className="flex items-start justify-between gap-2">
+                                    <p className="text-sm font-semibold text-white leading-tight line-clamp-2">{issue.title}</p>
+                                    <ArrowUpRight size={14} className="text-slate-500 shrink-0 mt-0.5" />
+                                </div>
+                                {!issue.imageUrl && (
+                                    <p className="text-xs text-slate-500">{issue.department}</p>
+                                )}
+                                <div className="flex items-center gap-2 flex-wrap">
+                                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${statusColor[issue.status] || 'bg-slate-700 text-slate-400'}`}>
+                                        {issue.status}
+                                    </span>
+                                    <span className="text-[10px] text-slate-500 flex items-center gap-1">
+                                        <MapPin size={10} /> {issue.distanceKm} km away
+                                    </span>
+                                </div>
+                                <div className="flex items-center justify-between pt-1">
+                                    <p className="text-[10px] text-slate-600 truncate">{issue.complaintId}</p>
+                                    <button
+                                        onClick={() => handleUpvote(issue._id)}
+                                        disabled={!user}
+                                        className={`flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-lg transition-all ${upvotedSet.has(issue._id)
+                                            ? 'bg-blue-500/20 text-blue-400 border border-blue-500/30'
+                                            : 'bg-white/5 text-slate-400 hover:bg-white/10 border border-white/5'
+                                            } ${!user ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                        title={!user ? 'Login to upvote' : upvotedSet.has(issue._id) ? 'Remove upvote' : 'Upvote this issue'}
+                                    >
+                                        <ThumbsUp size={12} />
+                                        {issue.upvotes ?? 0}
+                                    </button>
+                                </div>
                             </div>
                         </div>
-                    </div>
-                ))}
+                    ))}
+                </div>
             </div>
-        </div>
-    );
+
+            {/* Lightbox */}
+            {lightboxSrc && (
+                <ImageLightbox
+                    src={lightboxSrc.src}
+                    alt={lightboxSrc.alt}
+                    onClose={() => setLightboxSrc(null)}
+                />
+            )}
+        </>);
 };
 
 export default NearbyIssuesPanel;
