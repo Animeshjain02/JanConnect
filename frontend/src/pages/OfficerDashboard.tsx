@@ -377,7 +377,6 @@ const OfficerDashboard = () => {
                     </div>
                 )}
             </div>
-        </div>
 
             {lightbox && (
                 <ImageLightbox
