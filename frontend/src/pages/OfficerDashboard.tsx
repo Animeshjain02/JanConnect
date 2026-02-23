@@ -189,12 +189,11 @@ const OfficerDashboard = () => {
                                             </div>
 
                                             <h4 className="text-xl font-semibold text-slate-100">{complaint.title}</h4>
-
                                             {(complaint as any).imageUrl && (
                                                 <ClickableImage
                                                     src={(complaint as any).imageUrl}
                                                     alt={complaint.title}
-                                                    className="h-40 w-full rounded-xl border border-white/10 overflow-hidden"
+                                                    className="h-40 w-full rounded-xl border border-white/10 overflow-hidden mb-2"
                                                     onClick={() => setLightbox({ src: (complaint as any).imageUrl, alt: complaint.title })}
                                                 />
                                             )}
@@ -268,7 +267,7 @@ const OfficerDashboard = () => {
                                                     <p className="text-[10px] text-slate-500 uppercase font-bold tracking-wider">Assigned Officer</p>
 
                                                     {complaint.assignedOfficerName ? (
-                                                        // Already assigned â€” show name with edit option
+                                                        // Already assigned GÇö show name with edit option
                                                         <div className="space-y-2">
                                                             <div className="flex items-center gap-2">
                                                                 <div className="w-7 h-7 rounded-full bg-indigo-500/20 text-indigo-400 flex items-center justify-center flex-shrink-0">
@@ -296,7 +295,7 @@ const OfficerDashboard = () => {
                                                             </div>
                                                         </div>
                                                     ) : (
-                                                        // Not yet assigned â€” show input form
+                                                        // Not yet assigned GÇö show input form
                                                         <div className="space-y-1.5">
                                                             <div className="flex items-center gap-2 text-[10px] text-slate-600 italic py-1">
                                                                 <User size={12} />
