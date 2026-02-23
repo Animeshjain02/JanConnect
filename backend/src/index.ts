@@ -16,15 +16,15 @@ const PORT = process.env.PORT || 5000;
 initSlaEscalationJob();
 
 // Middleware
-const allowedOrigins = [
-    'http://localhost:5173',
-    'http://localhost:4173',
-    process.env.ALLOWED_ORIGIN || 'https://jan-connect.vercel.app'
-];
-
 app.use(cors({
     origin: (origin, callback) => {
-        if (!origin || allowedOrigins.includes(origin)) {
+        // Allow: no origin (Postman/curl), localhost, any Vercel deployment, custom domain
+        const isAllowed =
+            !origin ||
+            origin.includes('localhost') ||
+            origin.endsWith('.vercel.app') ||
+            origin === process.env.ALLOWED_ORIGIN;
+        if (isAllowed) {
             callback(null, true);
         } else {
             callback(new Error(`CORS blocked: ${origin}`));
