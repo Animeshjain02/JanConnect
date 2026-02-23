@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import { MessageSquare, Send, Check, ShieldCheck, Loader2 } from 'lucide-react';
 import axios from 'axios';
 
-const API_BASE = 'http://localhost:8000/api';
+const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8000/api';
 
 type Message = { type: 'bot' | 'user'; text: string; loading?: boolean };
 
@@ -26,10 +26,9 @@ const WhatsAppBotMock = () => {
 
     const lookupComplaint = async (complaintId: string) => {
         setFetching(true);
-        // Add a loading placeholder
-        setChat(prev => [...prev, { type: 'bot', text: '🔍 Fetching real-time data...', loading: true }]);
+        setChat(prev => [...prev, { type: 'bot', text: '🔍 Fetching real-time data... (this may take ~30s if server is waking up)', loading: true }]);
         try {
-            const res = await axios.get(`${API_BASE}/complaints/public-status/${complaintId.trim()}`);
+            const res = await axios.get(`${API_BASE}/complaints/public-status/${complaintId.trim()}`, { timeout: 60000 });
             const c = res.data;
 
             const sla = c.slaDeadline ? new Date(c.slaDeadline).toLocaleDateString('en-IN') : 'N/A';
