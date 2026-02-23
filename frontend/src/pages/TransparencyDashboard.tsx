@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import api from '../services/api';
+import NearbyIssuesPanel from '../components/NearbyIssuesPanel';
 import {
     Bar,
     Doughnut
@@ -193,6 +194,11 @@ const TransparencyDashboard = () => {
                         </div>
                     ))}
                 </div>
+            </div>
+
+            {/* Nearby Issues */}
+            <div className="glass-card p-8 border border-white/5 space-y-6">
+                <NearbyIssuesPanel radiusKm={3} />
             </div>
         </div>
     );

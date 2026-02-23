@@ -270,3 +270,74 @@ export const getComplaintStatusPublic = async (req: any, res: Response) => {
         res.status(500).json({ message: error.message });
     }
 };
+
+// Haversine formula — returns distance in km between two lat/lng points
+const haversineKm = (lat1: number, lng1: number, lat2: number, lng2: number): number => {
+    const R = 6371;
+    const dLat = ((lat2 - lat1) * Math.PI) / 180;
+    const dLng = ((lng2 - lng1) * Math.PI) / 180;
+    const a =
+        Math.sin(dLat / 2) ** 2 +
+        Math.cos((lat1 * Math.PI) / 180) * Math.cos((lat2 * Math.PI) / 180) * Math.sin(dLng / 2) ** 2;
+    return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+};
+
+export const getNearbyComplaints = async (req: AuthRequest, res: Response) => {
+    try {
+        const lat = parseFloat(req.query.lat as string);
+        const lng = parseFloat(req.query.lng as string);
+        const radius = parseFloat((req.query.radius as string) || '3');
+
+        if (isNaN(lat) || isNaN(lng)) {
+            return res.status(400).json({ message: 'lat and lng query params are required' });
+        }
+
+        // Coarse bounding-box first to reduce DB scan (~radius/111 degrees)
+        const delta = radius / 111;
+        const complaints = await Complaint.find({
+            'location.lat': { $gt: lat - delta, $lt: lat + delta },
+            'location.lng': { $gt: lng - delta, $lt: lng + delta },
+        }).select('complaintId title description department status priorityLevel location imageUrl upvotes upvotedBy createdAt assignedOfficerName');
+
+        // Precise Haversine filter
+        const nearby = complaints
+            .map(c => ({
+                ...c.toObject(),
+                distanceKm: Math.round(haversineKm(lat, lng, c.location.lat, c.location.lng) * 10) / 10,
+            }))
+            .filter(c => c.distanceKm <= radius)
+            .sort((a, b) => b.upvotes - a.upvotes); // most upvoted first
+
+        res.status(200).json(nearby);
+    } catch (error: any) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
+export const upvoteComplaint = async (req: AuthRequest, res: Response) => {
+    try {
+        if (!req.user) return res.status(401).json({ message: 'Unauthorized' });
+        const { id } = req.params;
+        const userId = req.user.id;
+
+        const complaint = await Complaint.findById(id);
+        if (!complaint) return res.status(404).json({ message: 'Complaint not found' });
+
+        const alreadyUpvoted = (complaint.upvotedBy as any[]).includes(userId);
+
+        if (alreadyUpvoted) {
+            // Toggle off
+            complaint.upvotedBy = (complaint.upvotedBy as any[]).filter((uid: any) => uid.toString() !== userId) as any;
+            complaint.upvotes = Math.max(0, complaint.upvotes - 1);
+        } else {
+            // Toggle on
+            (complaint.upvotedBy as any[]).push(userId);
+            complaint.upvotes += 1;
+        }
+
+        await complaint.save();
+        res.status(200).json({ upvotes: complaint.upvotes, upvoted: !alreadyUpvoted });
+    } catch (error: any) {
+        res.status(500).json({ message: error.message });
+    }
+};

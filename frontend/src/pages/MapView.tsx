@@ -1,10 +1,11 @@
 import { useEffect, useState } from 'react';
-import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import type { Complaint } from '../types';
 import api from '../services/api';
 import L from 'leaflet';
 import { Filter } from 'lucide-react';
+import NearbyIssuesPanel from '../components/NearbyIssuesPanel';
 
 const MapView = () => {
     const [complaints, setComplaints] = useState<Complaint[]>([]);
@@ -54,6 +55,17 @@ const MapView = () => {
         });
     };
 
+    // Auto-centers map on user's GPS location
+    const UserLocationCenterer = () => {
+        const map = useMap();
+        useEffect(() => {
+            navigator.geolocation?.getCurrentPosition(pos => {
+                map.setView([pos.coords.latitude, pos.coords.longitude], 14);
+            });
+        }, [map]);
+        return null;
+    };
+
     if (loading) return (
         <div className="h-full flex flex-col items-center justify-center bg-slate-900 border border-white/5 rounded-2xl gap-4">
             <div className="w-12 h-12 border-4 border-blue-500/20 border-t-blue-500 rounded-full animate-spin" />
@@ -62,87 +74,102 @@ const MapView = () => {
     );
 
     return (
-        <div className="h-full w-full relative bg-slate-950 border border-white/5 rounded-2xl overflow-hidden shadow-2xl">
-            {/* Filter Overlay */}
-            <div className="absolute top-4 right-4 z-[1000] flex flex-col gap-2">
-                <div className="glass-card p-4 border border-white/10 space-y-4 min-w-[200px]">
-                    <div className="flex items-center gap-2 text-white font-bold text-xs uppercase tracking-widest pb-2 border-b border-white/5">
-                        <Filter size={14} className="text-blue-500" />
-                        Smart Filters
-                    </div>
+        <div className="flex h-full w-full">
+            <div className="flex-1 h-full relative bg-slate-950 border border-white/5 rounded-2xl overflow-hidden shadow-2xl">
+                {/* Filter Overlay */}
+                <div className="absolute top-4 right-4 z-[1000] flex flex-col gap-2">
+                    <div className="glass-card p-4 border border-white/10 space-y-4 min-w-[200px]">
+                        <div className="flex items-center gap-2 text-white font-bold text-xs uppercase tracking-widest pb-2 border-b border-white/5">
+                            <Filter size={14} className="text-blue-500" />
+                            Smart Filters
+                        </div>
 
-                    <div className="space-y-3">
-                        <FilterSelect
-                            label="Status"
-                            value={filters.status}
-                            options={['All', 'Submitted', 'In Progress', 'Resolved', 'Escalated']}
-                            onChange={(v: string) => setFilters({ ...filters, status: v })}
-                        />
-                        <FilterSelect
-                            label="Priority"
-                            value={filters.priority}
-                            options={['All', 'Low', 'Medium', 'High', 'Critical']}
-                            onChange={(v: string) => setFilters({ ...filters, priority: v })}
-                        />
-                        <FilterSelect
-                            label="Department"
-                            value={filters.department}
-                            options={['All', 'Public Works', 'Health', 'Education', 'Sanitation', 'Water Authority']}
-                            onChange={(v: string) => setFilters({ ...filters, department: v })}
-                        />
-                    </div>
+                        <div className="space-y-3">
+                            <FilterSelect
+                                label="Status"
+                                value={filters.status}
+                                options={['All', 'Submitted', 'In Progress', 'Resolved', 'Escalated']}
+                                onChange={(v: string) => setFilters({ ...filters, status: v })}
+                            />
+                            <FilterSelect
+                                label="Priority"
+                                value={filters.priority}
+                                options={['All', 'Low', 'Medium', 'High', 'Critical']}
+                                onChange={(v: string) => setFilters({ ...filters, priority: v })}
+                            />
+                            <FilterSelect
+                                label="Department"
+                                value={filters.department}
+                                options={['All', 'Public Works', 'Health', 'Education', 'Sanitation', 'Water Authority']}
+                                onChange={(v: string) => setFilters({ ...filters, department: v })}
+                            />
+                        </div>
 
-                    <div className="pt-2 text-[10px] text-slate-500 font-medium flex justify-between">
-                        <span>Showing:</span>
-                        <span className="text-blue-400">{filteredComplaints.length} issues</span>
+                        <div className="pt-2 text-[10px] text-slate-500 font-medium flex justify-between">
+                            <span>Showing:</span>
+                            <span className="text-blue-400">{filteredComplaints.length} issues</span>
+                        </div>
                     </div>
                 </div>
+
+                {/* Legend Overlay */}
+                <div className="absolute bottom-4 left-4 z-[1000] glass-card p-3 border border-white/10 text-[10px] space-y-2">
+                    <LegendItem color="#3b82f6" label="Standard" />
+                    <LegendItem color="#f59e0b" label="In Progress" />
+                    <LegendItem color="#22c55e" label="Resolved" />
+                    <LegendItem color="#ef4444" label="Critical / Escalated" />
+                </div>
+
+                <MapContainer
+                    center={[20.5937, 78.9629]}
+                    zoom={5}
+                    style={{ height: '100%', width: '100%', background: '#0f172a' }}
+                    className="z-0"
+                >
+                    <TileLayer
+                        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                        className="map-tiles"
+                    />
+                    <UserLocationCenterer />
+                    {filteredComplaints.map(complaint => (
+                        complaint.location?.lat && complaint.location?.lng && (
+                            <Marker
+                                key={complaint._id}
+                                position={[complaint.location.lat, complaint.location.lng]}
+                                icon={getMarkerIcon(complaint.status)}
+                            >
+                                <Popup className="custom-popup">
+                                    <div className="p-2 space-y-2 min-w-[200px]">
+                                        {(complaint as any).imageUrl && (
+                                            <img
+                                                src={(complaint as any).imageUrl}
+                                                alt={complaint.title}
+                                                className="w-full h-24 object-cover rounded-lg mb-2"
+                                            />
+                                        )}
+                                        <div className="flex justify-between items-start gap-4">
+                                            <h3 className="font-bold text-slate-900 text-sm">{complaint.title}</h3>
+                                            <span className={`text-[9px] font-black px-1.5 py-0.5 rounded ${getPrioBadge(complaint.priorityLevel)}`}>
+                                                {complaint.priorityLevel?.toUpperCase()}
+                                            </span>
+                                        </div>
+                                        <p className="text-[11px] text-slate-600 line-clamp-2 leading-relaxed">{complaint.description}</p>
+                                        <div className="pt-2 border-t border-slate-100 flex justify-between items-center text-[10px]">
+                                            <span className="text-blue-600 font-bold uppercase">{complaint.department}</span>
+                                            <span className="text-slate-400">{new Date(complaint.createdAt).toLocaleDateString()}</span>
+                                        </div>
+                                    </div>
+                                </Popup>
+                            </Marker>
+                        )
+                    ))}
+                </MapContainer>
             </div>
 
-            {/* Legend Overlay */}
-            <div className="absolute bottom-4 left-4 z-[1000] glass-card p-3 border border-white/10 text-[10px] space-y-2">
-                <LegendItem color="#3b82f6" label="Standard" />
-                <LegendItem color="#f59e0b" label="In Progress" />
-                <LegendItem color="#22c55e" label="Resolved" />
-                <LegendItem color="#ef4444" label="Critical / Escalated" />
+            {/* Nearby Issues Sidebar */}
+            <div className="w-80 shrink-0 overflow-y-auto p-4 space-y-4 bg-slate-950/50 border-l border-white/5">
+                <NearbyIssuesPanel radiusKm={3} />
             </div>
-
-            <MapContainer
-                center={[20.5937, 78.9629]}
-                zoom={5}
-                style={{ height: '100%', width: '100%', background: '#0f172a' }}
-                className="z-0"
-            >
-                <TileLayer
-                    url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                    className="map-tiles"
-                />
-                {filteredComplaints.map(complaint => (
-                    complaint.location?.lat && complaint.location?.lng && (
-                        <Marker
-                            key={complaint._id}
-                            position={[complaint.location.lat, complaint.location.lng]}
-                            icon={getMarkerIcon(complaint.status)}
-                        >
-                            <Popup className="custom-popup">
-                                <div className="p-2 space-y-2 min-w-[200px]">
-                                    <div className="flex justify-between items-start gap-4">
-                                        <h3 className="font-bold text-slate-900 text-sm">{complaint.title}</h3>
-                                        <span className={`text-[9px] font-black px-1.5 py-0.5 rounded ${getPrioBadge(complaint.priorityLevel)}`}>
-                                            {complaint.priorityLevel?.toUpperCase()}
-                                        </span>
-                                    </div>
-                                    <p className="text-[11px] text-slate-600 line-clamp-2 leading-relaxed">{complaint.description}</p>
-                                    <div className="pt-2 border-t border-slate-100 flex justify-between items-center text-[10px]">
-                                        <span className="text-blue-600 font-bold uppercase">{complaint.department}</span>
-                                        <span className="text-slate-400">{new Date(complaint.createdAt).toLocaleDateString()}</span>
-                                    </div>
-                                </div>
-                            </Popup>
-                        </Marker>
-                    )
-                ))}
-            </MapContainer>
         </div>
     );
 };

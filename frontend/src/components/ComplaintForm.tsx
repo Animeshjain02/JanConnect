@@ -1,6 +1,6 @@
 import React, { useState, useRef } from 'react';
 import api from '../services/api';
-import { Loader2, Camera, Mic, MapPin, Send, Check, X } from 'lucide-react';
+import { Loader2, Camera, Mic, MapPin, Send, Check, X, Sparkles } from 'lucide-react';
 
 interface ComplaintFormProps {
     onSuccess: () => void;
@@ -18,6 +18,8 @@ const ComplaintForm: React.FC<ComplaintFormProps> = ({ onSuccess, onClose }) => 
     const [loading, setLoading] = useState(false);
     const [locating, setLocating] = useState(false);
     const [recording, setRecording] = useState(false);
+    const [aiAnalyzing, setAiAnalyzing] = useState(false);
+    const [aiMessage, setAiMessage] = useState('');
     const [error, setError] = useState('');
 
     const fileInputRef = useRef<HTMLInputElement>(null);
@@ -55,8 +57,31 @@ const ComplaintForm: React.FC<ComplaintFormProps> = ({ onSuccess, onClose }) => 
         const file = e.target.files?.[0];
         if (file) {
             const reader = new FileReader();
-            reader.onloadend = () => {
-                setFormData(prev => ({ ...prev, imageUrl: reader.result as string }));
+            reader.onloadend = async () => {
+                const base64 = reader.result as string;
+                setFormData(prev => ({ ...prev, imageUrl: base64 }));
+                // 🤖 Trigger AI analysis
+                setAiAnalyzing(true);
+                setAiMessage('🤖 AI is analysing your image...');
+                try {
+                    const res = await api.post('/ai/analyze-image', { imageBase64: base64 });
+                    if (res.data.title && !res.data.error) {
+                        setFormData(prev => ({
+                            ...prev,
+                            imageUrl: base64,
+                            title: res.data.title || prev.title,
+                            description: res.data.description || prev.description,
+                        }));
+                        setAiMessage(`✨ AI detected: ${res.data.category || 'Civic Issue'} — fields auto-filled!`);
+                    } else {
+                        setAiMessage('ℹ️ AI unavailable — please fill in the details manually.');
+                    }
+                } catch {
+                    setAiMessage('ℹ️ AI unavailable — please fill in the details manually.');
+                } finally {
+                    setAiAnalyzing(false);
+                    setTimeout(() => setAiMessage(''), 5000);
+                }
             };
             reader.readAsDataURL(file);
         }
@@ -134,6 +159,35 @@ const ComplaintForm: React.FC<ComplaintFormProps> = ({ onSuccess, onClose }) => 
                         </div>
                     )}
 
+                    {/* AI Status Banner */}
+                    {aiMessage && (
+                        <div className={`flex items-center gap-2 px-4 py-3 rounded-xl text-xs font-semibold ${aiAnalyzing
+                                ? 'bg-purple-500/10 border border-purple-500/30 text-purple-300'
+                                : aiMessage.includes('✨')
+                                    ? 'bg-emerald-500/10 border border-emerald-500/30 text-emerald-300'
+                                    : 'bg-slate-800 border border-white/5 text-slate-400'
+                            }`}>
+                            {aiAnalyzing ? <Loader2 size={14} className="animate-spin" /> : <Sparkles size={14} />}
+                            {aiMessage}
+                        </div>
+                    )}
+
+                    {/* Image Preview */}
+                    {formData.imageUrl && (
+                        <div className="relative rounded-xl overflow-hidden border border-white/10 group">
+                            <img src={formData.imageUrl} alt="Preview" className="w-full h-40 object-cover" />
+                            <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 to-transparent" />
+                            <button
+                                type="button"
+                                onClick={() => setFormData(prev => ({ ...prev, imageUrl: '' }))}
+                                className="absolute top-2 right-2 bg-slate-950/80 hover:bg-red-500 text-white rounded-full p-1.5 transition-colors"
+                            >
+                                <X size={12} />
+                            </button>
+                            <span className="absolute bottom-2 left-3 text-xs text-white/70 font-medium">Photo attached</span>
+                        </div>
+                    )}
+
                     <div className="space-y-4">
                         <div>
                             <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1.5 ml-1">Issue Summary</label>
@@ -170,12 +224,15 @@ const ComplaintForm: React.FC<ComplaintFormProps> = ({ onSuccess, onClose }) => 
                         />
                         <button
                             type="button"
-                            className={`flex flex-col items-center justify-center gap-2 border rounded-2xl p-4 transition-all ${formData.imageUrl ? 'bg-blue-500/10 border-blue-500/30' : 'bg-slate-900 border-white/5 hover:border-blue-500/30'}`}
+                            className={`flex flex-col items-center justify-center gap-2 border rounded-2xl p-4 transition-all ${aiAnalyzing
+                                    ? 'bg-purple-500/10 border-purple-500/30 animate-pulse'
+                                    : formData.imageUrl ? 'bg-blue-500/10 border-blue-500/30' : 'bg-slate-900 border-white/5 hover:border-blue-500/30'
+                                }`}
                             onClick={() => fileInputRef.current?.click()}
                         >
-                            {formData.imageUrl ? <Check className="text-blue-400" size={24} /> : <Camera size={24} className="text-slate-400" />}
+                            {aiAnalyzing ? <Loader2 size={24} className="animate-spin text-purple-400" /> : formData.imageUrl ? <Check className="text-blue-400" size={24} /> : <Camera size={24} className="text-slate-400" />}
                             <span className="text-[10px] uppercase font-black tracking-widest text-slate-400">
-                                {formData.imageUrl ? 'Photo Added' : 'Add Photo'}
+                                {aiAnalyzing ? 'AI Scanning...' : formData.imageUrl ? 'Photo Added' : 'Add Photo'}
                             </span>
                         </button>
 

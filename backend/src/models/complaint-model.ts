@@ -38,6 +38,8 @@ export interface IComplaint extends Document {
         updatedAt: Date;
         note?: string;
     }>;
+    upvotes: number;
+    upvotedBy: mongoose.Types.ObjectId[];
     createdAt: Date;
     updatedAt: Date;
 }
@@ -69,7 +71,9 @@ const ComplaintSchema: Schema = new Schema({
         status: { type: String, enum: Object.values(ComplaintStatus) },
         updatedAt: { type: Date, default: Date.now },
         note: { type: String }
-    }]
+    }],
+    upvotes: { type: Number, default: 0 },
+    upvotedBy: [{ type: Schema.Types.ObjectId, ref: 'User' }]
 }, { timestamps: true });
 
 export default mongoose.model<IComplaint>('Complaint', ComplaintSchema);
