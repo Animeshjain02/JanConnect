@@ -18,15 +18,16 @@ initSlaEscalationJob();
 // Middleware
 app.use(cors({
     origin: (origin, callback) => {
-        // Allow: no origin (Postman/curl), localhost, any Vercel deployment, custom domain
         const isAllowed =
             !origin ||
             origin.includes('localhost') ||
             origin.endsWith('.vercel.app') ||
+            origin === 'https://jan-connect-tawny.vercel.app' ||
             origin === process.env.ALLOWED_ORIGIN;
         if (isAllowed) {
             callback(null, true);
         } else {
+            console.warn(`CORS blocked origin: ${origin}`);
             callback(new Error(`CORS blocked: ${origin}`));
         }
     },
