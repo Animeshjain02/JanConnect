@@ -24,7 +24,6 @@ const allowedOrigins = [
 
 app.use(cors({
     origin: (origin, callback) => {
-        // Allow requests with no origin (e.g. Postman, curl)
         if (!origin || allowedOrigins.includes(origin)) {
             callback(null, true);
         } else {
@@ -40,39 +39,30 @@ app.use('/api/auth', authRoutes);
 app.use('/api/complaints', complaintRoutes);
 app.use('/api/projects', projectRoutes);
 
-// Basic Route
-app.get('/', (req: Request, res: Response) => {
+// Health check
+app.get('/', (_req: Request, res: Response) => {
     res.send('CivicAI - JanConnect Backend is running!');
 });
 
-// Database Connection
-const MONGODB_URI = (process.env.MONGODB_URI || 'mongodb://localhost:27017/civicai').trim();
+// ✅ Bind port FIRST so Render detects an open port immediately
+app.listen(PORT, () => {
+    console.log(`🚀 [Server] Running on port ${PORT}`);
+    console.log(`🌍 [Env] NODE_ENV=${process.env.NODE_ENV || 'development'}`);
+});
 
-// Mask URI for safe logging
-const maskedUri = MONGODB_URI.replace(/\/\/(.*):(.*)@/, '//***:***@');
-console.log(`[DB] Attempting to connect to Atlas cluster...`);
-console.log(`[DB] Masked URI: ${maskedUri}`);
+// Connect to MongoDB AFTER server is up
+const MONGODB_URI = (process.env.MONGODB_URI || '').trim();
 
-mongoose.connect(MONGODB_URI, {
-    authSource: 'admin' // Explicitly set authSource for Atlas
-} as any)
-    .then(() => {
-        console.log('✅ [DB] Successfully connected to MongoDB Atlas');
-        app.listen(PORT, () => {
-            console.log(`🚀 [Server] Running on port ${PORT}`);
+if (!MONGODB_URI) {
+    console.error('❌ MONGODB_URI is not set! Add it to your Render environment variables.');
+} else {
+    const maskedUri = MONGODB_URI.replace(/\/\/(.*):(.*)@/, '//***:***@');
+    console.log(`[DB] Connecting to: ${maskedUri}`);
+
+    mongoose.connect(MONGODB_URI)
+        .then(() => console.log('✅ [DB] Connected to MongoDB Atlas'))
+        .catch((error) => {
+            console.error('❌ [DB] Connection failed:', error.message);
+            console.error('👉 Check MONGODB_URI environment variable in your Render dashboard.');
         });
-    })
-    .catch((error) => {
-        console.error('❌ [DB] Connection Error details:');
-        console.error(`   - Code: ${error.code}`);
-        console.error(`   - Message: ${error.message}`);
-
-        if (error.message.includes('bad auth')) {
-            console.error('\n--- TROUBLESHOOTING ---');
-            console.error('1. The username or password in your .env is being rejected.');
-            console.error('2. Please go to MongoDB Atlas -> Database Access.');
-            console.error('3. Reset the password for jainanimesh029_db_user to X4_J-!FniF3XDJ@.');
-            console.error('4. Ensure the user has "Atlas admin" or "Read and write to any database" roles.');
-            console.error('5. Check "Network Access" and ensure your IP is whitelisted.\n');
-        }
-    });
+}
