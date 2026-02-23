@@ -1,0 +1,125 @@
+@import "tailwindcss";
+
+@theme {
+  --color-background: oklch(0.129 0.042 264.695);
+  --color-foreground: oklch(0.985 0.001 106.423);
+  --color-primary: oklch(0.707 0.165 254.624);
+  --color-secondary: oklch(0.269 0.048 262.608);
+  --color-muted: oklch(0.269 0.048 262.608);
+  --color-muted-foreground: oklch(0.708 0.015 256.435);
+  --color-accent: oklch(0.269 0.048 262.608);
+  --color-destructive: oklch(0.396 0.141 25.723);
+  --color-border: oklch(0.269 0.048 262.608);
+  --color-input: oklch(0.269 0.048 262.608);
+  --color-ring: oklch(0.446 0.233 261.24);
+  --radius-xl: 0.75rem;
+}
+
+@layer base {
+  * {
+    border-color: var(--color-border);
+  }
+}
+
+body {
+  background-color: #020617 !important;
+  color: #f8fafc !important;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  font-feature-settings: "rlig" 1, "calt" 1;
+  margin: 0;
+  min-height: 100vh;
+}
+
+.bg-auth-mesh {
+  background-color: #020617;
+  background-image:
+    radial-gradient(at 0% 0%, rgba(30, 58, 138, 0.3) 0, transparent 50%),
+    radial-gradient(at 50% 0%, rgba(59, 130, 246, 0.1) 0, transparent 50%),
+    radial-gradient(at 100% 0%, rgba(30, 58, 138, 0.3) 0, transparent 50%);
+}
+
+.glass-card {
+  background-color: rgba(2, 6, 23, 0.7) !important;
+  backdrop-filter: blur(24px) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.8) !important;
+  border-radius: 1.5rem !important;
+}
+
+/* Fix for overlapping icons and text */
+.input-field {
+  width: 100% !important;
+  background-color: rgba(15, 23, 42, 0.6) !important;
+  border: 1px solid #334155 !important;
+  border-radius: 0.75rem !important;
+  padding-top: 0.75rem !important;
+  padding-bottom: 0.75rem !important;
+  padding-right: 1rem !important;
+  padding-left: 3.25rem !important;
+  /* Increased padding to 52px to ensure clear separation */
+  color: #f8fafc !important;
+  font-size: 1rem !important;
+  line-height: 1.5rem !important;
+  transition: all 200ms ease-in-out !important;
+}
+
+.input-field:focus {
+  outline: none !important;
+  border-color: #3b82f6 !important;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2) !important;
+  background-color: rgba(15, 23, 42, 0.8) !important;
+}
+
+.input-field::placeholder {
+  color: #94a3b8 !important;
+  opacity: 1 !important;
+}
+
+/* Ensure absolute icons are correctly centered horizontally */
+.relative.group svg {
+  left: 1.25rem !important;
+  /* Equivalent to left-5, ensures icon is centered in the 3.25rem padding */
+}
+
+.btn-primary {
+  width: 100% !important;
+  background-color: #2563eb !important;
+  color: #ffffff !important;
+  font-weight: 600 !important;
+  padding: 0.875rem 1.5rem !important;
+  border-radius: 0.75rem !important;
+  border: none !important;
+  cursor: pointer !important;
+  transition: all 200ms !important;
+  box-shadow: 0 10px 15px -3px rgba(37, 99, 235, 0.25) !important;
+}
+
+.btn-primary:hover {
+  background-color: #3b82f6 !important;
+  transform: translateY(-1px) !important;
+  box-shadow: 0 12px 20px -3px rgba(37, 99, 235, 0.35) !important;
+}
+
+.btn-primary:active {
+  transform: scale(0.98) !important;
+}
+
+.btn-primary:disabled {
+  opacity: 0.5 !important;
+  cursor: not-allowed !important;
+}
+
+@keyframes slow-spin {
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.animate-slow-spin {
+  animation: slow-spin 20s linear infinite;
+}
