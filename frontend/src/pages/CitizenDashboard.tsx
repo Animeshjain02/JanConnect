@@ -48,7 +48,7 @@ const CitizenDashboard = () => {
     const handleConfirmResolution = async (id: string, confirmed: boolean) => {
         try {
             if (confirmed) {
-                await api.patch(`/ complaints / ${id}/confirm`);
+                await api.patch(`/complaints/${id}/confirm`);
             } else {
                 await api.patch(`/complaints/${id}/reopen`);
             }
