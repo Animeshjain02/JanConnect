@@ -50,6 +50,8 @@ export interface Complaint {
     assignedOfficerId?: { _id: string, name: string };
     assignedOfficerName?: string;
     duplicateCount: number;
+    upvotes: number;
+    upvotedBy: string[];
     history: Array<{
         status: string;
         updatedAt: string;

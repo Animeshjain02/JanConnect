@@ -56,10 +56,10 @@ export const createComplaint = async (req: AuthRequest, res: Response) => {
             location,
             imageUrl,
             voiceUrl,
-            status: ComplaintStatus.SUBMITTED,
+            status: ComplaintStatus.UNDER_REVIEW,
             slaDeadline,
             priorityScore: aiResult.confidence * 10,
-            history: [{ status: ComplaintStatus.SUBMITTED, note: 'Complaint submitted by citizen.' }]
+            history: [{ status: ComplaintStatus.UNDER_REVIEW, note: 'Complaint submitted and is now under review.' }]
         });
 
         await complaint.save();

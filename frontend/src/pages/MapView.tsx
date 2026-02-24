@@ -5,7 +5,6 @@ import type { Complaint } from '../types';
 import api from '../services/api';
 import L from 'leaflet';
 import { Filter } from 'lucide-react';
-import NearbyIssuesPanel from '../components/NearbyIssuesPanel';
 
 const MapView = () => {
     const [complaints, setComplaints] = useState<Complaint[]>([]);
@@ -164,11 +163,6 @@ const MapView = () => {
                         )
                     ))}
                 </MapContainer>
-            </div>
-
-            {/* Nearby Issues Sidebar */}
-            <div className="w-80 shrink-0 overflow-y-auto p-4 space-y-4 bg-slate-950/50 border-l border-white/5">
-                <NearbyIssuesPanel radiusKm={3} />
             </div>
         </div>
     );

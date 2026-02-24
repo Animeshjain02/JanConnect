@@ -12,6 +12,7 @@ import {
     Check,
     History,
     Map as MapIcon,
+    MapPin,
     BarChart3,
     Construction,
     Mic
@@ -20,6 +21,7 @@ import { Link } from 'react-router-dom';
 
 import ComplaintForm from '../components/ComplaintForm';
 import PublicWorksPanel from '../components/PublicWorksPanel';
+import ImageLightbox from '../components/ImageLightbox';
 
 const stages = ['Submitted', 'Under Review', 'Assigned', 'In Progress', 'Resolved', 'Reopened', 'Escalated'];
 
@@ -28,6 +30,7 @@ const CitizenDashboard = () => {
     const [complaints, setComplaints] = useState<Complaint[]>([]);
     const [showForm, setShowForm] = useState(false);
     const [confirmingId, setConfirmingId] = useState<string | null>(null);
+    const [selectedImage, setSelectedImage] = useState<string | null>(null);
 
     const fetchComplaints = async () => {
         try {
@@ -67,6 +70,13 @@ const CitizenDashboard = () => {
                         fetchComplaints();
                     }}
                     onClose={() => setShowForm(false)}
+                />
+            )}
+
+            {selectedImage && (
+                <ImageLightbox
+                    src={selectedImage}
+                    onClose={() => setSelectedImage(null)}
                 />
             )}
 
@@ -122,7 +132,8 @@ const CitizenDashboard = () => {
             </header>
 
             {/* Quick Access Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                <NavCard to="/nearby" icon={<MapPin size={20} />} title="Issues Near You" desc="Find & support local issues" color="text-red-500" />
                 <NavCard to="/map" icon={<MapIcon size={20} />} title="Civic Map" desc="Visualise local issues" color="text-blue-500" />
                 <NavCard to="/transparency" icon={<BarChart3 size={20} />} title="Transparency" desc="System performance" color="text-emerald-500" />
                 <NavCard to="/projects" icon={<Construction size={20} />} title="Works Portal" desc="Ongoing government projects" color="text-amber-500" />
@@ -216,7 +227,7 @@ const CitizenDashboard = () => {
                                                     value={new Date(complaint.slaDeadline).toLocaleDateString()}
                                                     isOverdue={new Date(complaint.slaDeadline) < new Date() && complaint.status !== 'Resolved'}
                                                 />
-                                                <DetailItem label="Similar Issues" value={`${complaint.duplicateCount || 0} merged`} />
+                                                <DetailItem label="Similar Issues" value={`${complaint.upvotes || 0} merged`} />
                                             </div>
 
                                             {(complaint.imageUrl || complaint.voiceUrl) && (
@@ -225,7 +236,7 @@ const CitizenDashboard = () => {
                                                         <div className="flex-shrink-0 w-24 h-24 rounded-xl border border-white/10 overflow-hidden bg-slate-900 group/img relative">
                                                             <img src={complaint.imageUrl} alt="evidence" className="w-full h-full object-cover" />
                                                             <div className="absolute inset-0 bg-black/40 opacity-0 group-hover/img:opacity-100 transition-opacity flex items-center justify-center">
-                                                                <button onClick={() => window.open(complaint.imageUrl, '_blank')} className="text-[8px] font-black text-white uppercase tracking-tighter">View Full</button>
+                                                                <button onClick={() => setSelectedImage(complaint.imageUrl!)} className="text-[8px] font-black text-white uppercase tracking-tighter">View Full</button>
                                                             </div>
                                                         </div>
                                                     )}

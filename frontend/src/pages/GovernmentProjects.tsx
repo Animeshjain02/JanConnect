@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import api from '../services/api';
 import { useAuth } from '../context/AuthContext';
-import NearbyIssuesPanel from '../components/NearbyIssuesPanel';
 import {
     Plus,
     MapPin,
@@ -181,13 +180,6 @@ const MetaBox = ({ icon, label, value }: any) => (
         <div className="flex items-center gap-1.5 text-slate-300 font-bold text-xs truncate">
             {icon}
             {value}
-        </div>
-
-        {/* Nearby Issues */}
-        <div className="p-6 max-w-7xl mx-auto pb-12">
-            <div className="glass-card p-8 border border-white/5 space-y-6">
-                <NearbyIssuesPanel radiusKm={3} />
-            </div>
         </div>
     </div>
 );

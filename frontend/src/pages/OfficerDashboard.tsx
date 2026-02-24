@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+ï»¿import React, { useEffect, useState } from 'react';
 import ImageLightbox, { ClickableImage } from '../components/ImageLightbox';
 import { useAuth } from '../context/AuthContext';
 import api from '../services/api';
@@ -11,14 +11,15 @@ import {
     UserCheck,
     MapPin,
     FileText,
-    History,
+    History as HistoryIcon,
     RefreshCw,
     CheckCircle2,
     Loader2,
     BarChart3,
     Map as MapIcon,
     Construction,
-    Mic
+    Mic,
+    ThumbsUp
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
@@ -146,7 +147,7 @@ const OfficerDashboard = () => {
             <div className="space-y-6">
                 <div className="flex items-center justify-between">
                     <h2 className="text-xl font-bold text-white flex items-center gap-2">
-                        <History className="w-5 h-5 text-blue-500" />
+                        <HistoryIcon className="w-5 h-5 text-blue-500" />
                         Departmental Task Board
                     </h2>
                     <div className="flex gap-2">
@@ -185,6 +186,10 @@ const OfficerDashboard = () => {
                                                 </span>
                                                 <span className={`px-3 py-1 rounded-full text-[10px] font-bold border ${getStatusColor(complaint.status)}`}>
                                                     {complaint.status.toUpperCase()}
+                                                </span>
+                                                <span className="flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold border border-blue-500/20 bg-blue-500/10 text-blue-400">
+                                                    <ThumbsUp size={10} />
+                                                    {(complaint as any).upvotes || 0} UPVOTES
                                                 </span>
                                             </div>
 
@@ -267,7 +272,7 @@ const OfficerDashboard = () => {
                                                     <p className="text-[10px] text-slate-500 uppercase font-bold tracking-wider">Assigned Officer</p>
 
                                                     {complaint.assignedOfficerName ? (
-                                                        // Already assigned GÇö show name with edit option
+                                                        // Already assigned GÃ‡Ã¶ show name with edit option
                                                         <div className="space-y-2">
                                                             <div className="flex items-center gap-2">
                                                                 <div className="w-7 h-7 rounded-full bg-indigo-500/20 text-indigo-400 flex items-center justify-center flex-shrink-0">
@@ -295,7 +300,7 @@ const OfficerDashboard = () => {
                                                             </div>
                                                         </div>
                                                     ) : (
-                                                        // Not yet assigned GÇö show input form
+                                                        // Not yet assigned GÃ‡Ã¶ show input form
                                                         <div className="space-y-1.5">
                                                             <div className="flex items-center gap-2 text-[10px] text-slate-600 italic py-1">
                                                                 <User size={12} />
@@ -325,6 +330,18 @@ const OfficerDashboard = () => {
                                                 <div>
                                                     <p className="text-[10px] text-slate-500 uppercase font-bold tracking-wider mb-2">Update Status</p>
                                                     <div className="flex flex-col gap-2">
+                                                        <button
+                                                            disabled={updatingId === complaint._id || complaint.status === 'Assigned'}
+                                                            onClick={() => updateStatus(complaint._id, 'Assigned')}
+                                                            className={`flex items-center justify-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all border
+                                                                ${complaint.status === 'Assigned'
+                                                                    ? 'bg-indigo-500/20 text-indigo-500 border-indigo-500/30 cursor-default'
+                                                                    : 'bg-white/5 text-slate-400 border-white/10 hover:bg-indigo-500/10 hover:text-indigo-500 hover:border-indigo-500/30'}`}
+                                                        >
+                                                            {updatingId === complaint._id ? <Loader2 className="w-3 h-3 animate-spin" /> : <UserCheck className="w-3 h-3" />}
+                                                            MARK ASSIGNED
+                                                        </button>
+
                                                         <button
                                                             disabled={updatingId === complaint._id || complaint.status === 'In Progress'}
                                                             onClick={() => updateStatus(complaint._id, 'In Progress')}

@@ -7,6 +7,7 @@ import OfficerDashboard from './pages/OfficerDashboard';
 import MapView from './pages/MapView';
 import TransparencyDashboard from './pages/TransparencyDashboard';
 import GovernmentProjects from './pages/GovernmentProjects';
+import IssuesNearYou from './pages/IssuesNearYou';
 import WhatsAppBotMock from './components/WhatsAppBotMock';
 
 // Full-screen spinner shown while auth is being restored from localStorage
@@ -44,6 +45,7 @@ function AppRoutes() {
       <Route path="/officer" element={<ProtectedRoute roles={['Officer']}><OfficerDashboard /></ProtectedRoute>} />
       <Route path="/transparency" element={<ProtectedRoute><TransparencyDashboard /></ProtectedRoute>} />
       <Route path="/projects" element={<ProtectedRoute><GovernmentProjects /></ProtectedRoute>} />
+      <Route path="/nearby" element={<ProtectedRoute roles={['Citizen']}><IssuesNearYou /></ProtectedRoute>} />
       <Route
         path="/map"
         element={
